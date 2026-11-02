@@ -1,0 +1,7 @@
+.venv/
+.uv-cache/
+__pycache__/
+*.pyc
+native/generated/
+*.sqlite3*
+test-results/

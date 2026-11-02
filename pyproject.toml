@@ -1,0 +1,9 @@
+[project]
+name = "browse-history-tracker"
+version = "0.1.0"
+description = "Local native messaging host for deliberate video browsing sessions"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.uv]
+package = false

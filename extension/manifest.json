@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Video Ledger",
+  "version": "0.1.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1cOYrS/KKXfDQIx72wQ2pLwt/YoTwhab8X7te9fPOrqh4OqRs+DRk9spd1y2bLu7O370qaExA+K1LLMTismjoCUP+rZo8KCsP6qIJ0hr9UmYgmVyDZbm+M4+tecz4XXItUmdb0mWw2+MmFtvIdQ7l6hLE9XsYxPMmRVC6g3grBdL6JhZJX0NUyAcI/8o0s4ri+C2iUzFPKkitIC0UJ7N5mC0B2sTzhsBmXpqeHolVMqPVVhSzKyW/rdnE6ZGtxHftEcHBICYnN9m8hrkE3wIgMktrKVtzrH3yHyI/KXVOHmiMZa4FvUrBBreIFGIx001UOBgsovRFHsU5THAezq2hQIDAQAB",
+  "description": "Local YouTube and Bilibili history, only for sessions you launch.",
+  "minimum_chrome_version": "120",
+  "permissions": ["storage", "unlimitedStorage", "scripting", "webNavigation", "nativeMessaging"],
+  "host_permissions": ["https://www.youtube.com/*", "https://www.bilibili.com/*"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "action": { "default_title": "Video Ledger — history and setup" },
+  "options_page": "dashboard.html"
+}
