@@ -1,23 +1,22 @@
 # Video Ledger
 
-A local Chrome extension for intentional YouTube and Bilibili sessions. Launch a site through its New Tab shortcut, browse normally, and close its last tracked tab to end the visit. Opening a site through an ordinary URL does not start tracking.
+Video Ledger is a Windows Chrome extension that measures time on YouTube and Bilibili. Start recording from the dashboard or a Chrome New Tab shortcut. The visit ends when its last tracked tab closes. History is stored in a local SQLite database.
 
-## Install on this Windows computer
+## Install on Windows
 
-1. In PowerShell, run:
+You’ll need Windows with the 64-bit .NET Framework C# compiler, Chrome 120 or later, Git, and `uv` on your PATH. The installer uses `uv` to set up Python 3.12.
+
+1. Clone the repo and register the native helper from PowerShell.
 
    ```powershell
-   Set-Location 'D:\dev\Documents\seadog\browse-history-tracker'
+   git clone https://github.com/cptseadog/Video-Ledger.git
+   Set-Location .\Video-Ledger
    .\scripts\install.ps1
    ```
 
-   This uses `uv` to create a Python 3.12 environment, compiles a tiny native messaging launcher with Windows' built-in .NET Framework compiler, creates the database if absent, and registers **only this helper** under the current user's Chrome native-messaging registry key. Administrator privileges are not needed. No Python dependencies or persistent server are required. The extension has a fixed public key, so its ID remains stable if the source folder moves.
+   The script compiles the native-messaging launcher, creates the database if needed, and registers the helper for the current Windows user. Setup requires no administrator privileges.
 
-2. Open `chrome://extensions` in Chrome, enable **Developer mode**, select **Load unpacked**, and choose:
-
-   ```text
-   D:\dev\Documents\seadog\browse-history-tracker\extension
-   ```
+2. Open `chrome://extensions` in Chrome, enable **Developer mode**, select **Load unpacked**, and choose the `extension` folder inside your clone. The installer prints its full path.
 
    Expected extension ID: `lmnpejcbbmondenejkiacaamgdpjblha`. Allow access to the two supported sites; otherwise Chrome cannot inject the recorder.
 
@@ -48,11 +47,7 @@ Website time and playback overlap. Do not add them together. The dashboard has t
 
 ## Storage and resource use
 
-The database lives at:
-
-```text
-D:\dev\Documents\Ivan\data\browse-history-tracker\history.sqlite3
-```
+New installs store history at `%LOCALAPPDATA%\Video Ledger\history.sqlite3`. The installer prints the database path and reuses the recorded location when you reinstall from the same checkout. To choose a directory or reconnect to an existing database from a fresh clone, run `scripts/install.ps1 -DataDir 'C:\path\to\history-folder'` with the folder that contains or will contain `history.sqlite3`.
 
 Data flows from the injected recorder to a persistent `chrome.storage.local` outbox, then through Chrome native messaging to Python/SQLite. SQLite commits a batch before returning acknowledgements. Unique event IDs make retries safe. No browsing data is sent to a cloud service, no local network port is opened, and no external assets or analytics are loaded by the dashboard.
 
@@ -62,19 +57,19 @@ If the helper is missing, records remain in the browser buffer. Retry happens on
 
 After a crash, the last uncheckpointed seconds may be missing (normally up to about 10 seconds per tab). Severe background timer throttling and sleep gaps are conservatively discarded, so playback is an estimate. The recorder measures browser activity, not whether a person was actually paying attention. Live site layouts can change; title/creator selectors may require updates.
 
-For backups, close tracked tabs and the dashboard, then copy `history.sqlite3` and any adjacent `-wal` / `-shm` files together, or use SQLite's backup API. Keep the database separate from the extension source. The installer accepts `-DataDir` for a different database directory; the dashboard's explanatory default-path text would also need updating.
+For backups, close tracked tabs and the dashboard, then copy `history.sqlite3` and any adjacent `-wal` / `-shm` files together, or use SQLite's backup API. Keep the database separate from the extension source.
 
 ## Development and verification
 
-Production code has no Node build step and no third-party Python packages.
+Install Node.js to run the JavaScript tests. The extension loads directly from source, and the native helper uses Python’s standard library.
 
 ```powershell
 .\scripts\test.ps1
 .\scripts\install.ps1 -PrepareOnly
-uv run python scripts/check_native.py
+uv run --locked --python 3.12 python scripts/check_native.py
 ```
 
-`-PrepareOnly` prepares files and checks the database without writing the registry. `check_native.py` verifies the actual generated Windows launcher and binary messaging protocol with a ping; it adds no browsing records.
+`-PrepareOnly` builds a separate test launcher in `native/generated/check` and uses a database inside that folder by default. `check_native.py` pings that launcher to verify the native messaging protocol and clean shutdown.
 
 The deterministic suite covers URL scoping, playback speed/seeks, child-tab session lifetime, buffer recovery, restart recovery, unauthorized messages, SQLite retry deduplication, transaction rollback, Unicode protocol messages, date-boundary splitting, and durable history.
 

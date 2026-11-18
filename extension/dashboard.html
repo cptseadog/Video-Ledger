@@ -1,17 +1,163 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Video Ledger</title><link rel="stylesheet" href="dashboard.css"></head>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Video Ledger</title>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
 <body>
-<main>
-  <header><div><span class="eyebrow">YOUR TIME, RECORDED LOCALLY</span><h1>Video Ledger<span class="dot">.</span></h1><p>A little perspective on where the hours go.</p></div><div class="launches"><button data-launch="youtube" class="youtube">▶ YouTube <span>↗</span></button><button data-launch="bilibili" class="bilibili">▣ Bilibili <span>↗</span></button></div></header>
-  <div class="statusbar"><span id="status" role="status">Checking local storage…</span><button id="refresh" class="quiet">Refresh ↻</button></div>
-  <section class="period"><div><h2>Your viewing, at a glance</h2><p>Only sessions started through your launchers appear here.</p></div><div class="filters"><label for="period">Period</label><select id="period"><option value="1">Today</option><option value="7" selected>Last 7 days</option><option value="30">Last 30 days</option><option value="custom">Custom dates</option></select><div id="custom" hidden><input type="date" id="from" aria-label="Start date"><span>to</span><input type="date" id="to" aria-label="End date"></div></div></section>
-  <section class="cards" aria-label="Usage totals"><article><span>Website time</span><strong id="foreground">—</strong><p>Time in the foreground</p></article><article><span>Video playback</span><strong id="playback">—</strong><p>Real time, adjusted for playback speed</p></article><article><span>Background playback</span><strong id="background">—</strong><p>Included in video playback</p></article><article><span>Visits</span><strong id="visits">—</strong><p>Sessions started from a launcher</p></article></section>
-  <p class="note">Website time and playback overlap; they are not added together. Simultaneous videos count separately toward playback.</p>
-  <section class="panel"><div class="panel-heading"><h2>Daily rhythm</h2><div class="legend"><span class="yt-key">YouTube</span><span class="bi-key">Bilibili</span></div></div><div id="chart" class="chart" aria-label="Daily foreground website time"></div><div class="table-scroll"><table><thead><tr><th>Day</th><th>Website time</th><th>Playback</th><th>Visits</th></tr></thead><tbody id="daily"></tbody></table></div></section>
-  <section class="panel"><div class="panel-heading"><h2>What you watched</h2><span class="note">One entry per video, per session</span></div><div id="history-empty" class="empty" hidden>Your history starts with your next visit.<br><span>Use a launcher above or your New Tab shortcuts.</span></div><div class="table-scroll"><table id="history-table"><thead><tr><th>Video</th><th>Opened</th><th>Length</th><th>Played</th></tr></thead><tbody id="history"></tbody></table></div><button id="more" class="quiet" hidden>Load more</button></section>
-  <section class="panel"><div class="panel-heading"><h2>Recent visits</h2><span class="note">Latest 100 in this period</span></div><div class="table-scroll"><table><thead><tr><th>Website</th><th>Started</th><th>Ended</th><th>Status</th></tr></thead><tbody id="sessions"></tbody></table></div></section>
-  <details class="setup" id="setup"><summary>Set up your New Tab shortcuts</summary><p>On Chrome’s New Tab page, choose <b>Add shortcut</b>. Add each name and URL below. These start recording; ordinary website links do not.</p><div class="shortcut"><b>YouTube</b><code id="youtube-url"></code><button data-copy="youtube" class="quiet">Copy URL</button></div><div class="shortcut"><b>Bilibili</b><code id="bilibili-url"></code><button data-copy="bilibili" class="quiet">Copy URL</button></div><p>First-time setup: load this extension and run <code>scripts/install.ps1</code> from the project. Your extension ID is <code id="extension-id"></code>.</p><p>Data stays in <code>D:\dev\Documents\Ivan\data\browse-history-tracker\history.sqlite3</code>. Removing the extension leaves this database in place but removes any unsaved browser buffer.</p></details>
-  <footer>Local storage. Deliberate entry. No quotas or reminders.</footer>
-</main><script type="module" src="dashboard.js"></script>
-</body></html>
+  <main>
+    <header>
+      <div>
+        <span class="eyebrow">YOUR TIME, RECORDED LOCALLY</span>
+        <h1>Video Ledger<span class="dot">.</span></h1>
+        <p>A little perspective on where the hours go.</p>
+      </div>
+      <div class="launches">
+        <button data-launch="youtube" class="youtube">▶ YouTube <span>↗</span></button>
+        <button data-launch="bilibili" class="bilibili">▣ Bilibili <span>↗</span></button>
+      </div>
+    </header>
+
+    <div class="statusbar">
+      <span id="status" role="status">Checking local storage…</span>
+      <button id="refresh" class="quiet">Refresh ↻</button>
+    </div>
+
+    <section class="period">
+      <div>
+        <h2>Your viewing, at a glance</h2>
+        <p>Only sessions started through your launchers appear here.</p>
+      </div>
+      <div class="filters">
+        <label for="period">Period</label>
+        <select id="period">
+          <option value="1">Today</option>
+          <option value="7" selected>Last 7 days</option>
+          <option value="30">Last 30 days</option>
+          <option value="custom">Custom dates</option>
+        </select>
+        <div id="custom" hidden>
+          <input type="date" id="from" aria-label="Start date">
+          <span>to</span>
+          <input type="date" id="to" aria-label="End date">
+        </div>
+      </div>
+    </section>
+
+    <section class="cards" aria-label="Usage totals">
+      <article>
+        <span>Website time</span>
+        <strong id="foreground">—</strong>
+        <p>Time in the foreground</p>
+      </article>
+      <article>
+        <span>Video playback</span>
+        <strong id="playback">—</strong>
+        <p>Real time, adjusted for playback speed</p>
+      </article>
+      <article>
+        <span>Background playback</span>
+        <strong id="background">—</strong>
+        <p>Included in video playback</p>
+      </article>
+      <article>
+        <span>Visits</span>
+        <strong id="visits">—</strong>
+        <p>Sessions started from a launcher</p>
+      </article>
+    </section>
+    <p class="note">Website time overlaps with playback. Simultaneous videos count separately toward playback.</p>
+
+    <section class="panel">
+      <div class="panel-heading">
+        <h2>Daily rhythm</h2>
+        <div class="legend">
+          <span class="yt-key">YouTube</span>
+          <span class="bi-key">Bilibili</span>
+        </div>
+      </div>
+      <div id="chart" class="chart" aria-label="Daily foreground website time"></div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Day</th>
+              <th>Website time</th>
+              <th>Playback</th>
+              <th>Visits</th>
+            </tr>
+          </thead>
+          <tbody id="daily"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading">
+        <h2>What you watched</h2>
+        <span class="note">One entry per video, per session</span>
+      </div>
+      <div id="history-empty" class="empty" hidden>
+        Your history starts with your next visit.<br>
+        <span>Use a launcher above or your New Tab shortcuts.</span>
+      </div>
+      <div class="table-scroll">
+        <table id="history-table">
+          <thead>
+            <tr>
+              <th>Video</th>
+              <th>Opened</th>
+              <th>Length</th>
+              <th>Played</th>
+            </tr>
+          </thead>
+          <tbody id="history"></tbody>
+        </table>
+      </div>
+      <button id="more" class="quiet" hidden>Load more</button>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading">
+        <h2>Recent visits</h2>
+        <span class="note">Latest 100 in this period</span>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Website</th>
+              <th>Started</th>
+              <th>Ended</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="sessions"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <details class="setup" id="setup">
+      <summary>Set up your New Tab shortcuts</summary>
+      <p>On Chrome’s New Tab page, choose <b>Add shortcut</b>. Add each name and URL below to start recording from New Tab.</p>
+      <div class="shortcut">
+        <b>YouTube</b>
+        <code id="youtube-url"></code>
+        <button data-copy="youtube" class="quiet">Copy URL</button>
+      </div>
+      <div class="shortcut">
+        <b>Bilibili</b>
+        <code id="bilibili-url"></code>
+        <button data-copy="bilibili" class="quiet">Copy URL</button>
+      </div>
+      <p>Run <code>scripts/install.ps1</code> from the project folder to register the native helper. Your extension ID is <code id="extension-id"></code>.</p>
+      <p>The installer prints the database path. New installs use <code>%LOCALAPPDATA%\Video Ledger\history.sqlite3</code> by default. Removing the extension clears its unsaved buffer and keeps the database on disk.</p>
+    </details>
+
+    <footer>Local storage. Deliberate entry. No quotas or reminders.</footer>
+  </main>
+  <script type="module" src="dashboard.js"></script>
+</body>
+</html>

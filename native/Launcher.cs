@@ -10,7 +10,8 @@ internal static class Launcher {
     private static string Quote(string value) {
         if (value.IndexOf('"') >= 0 || value.IndexOf('\n') >= 0 || value.IndexOf('\r') >= 0)
             throw new ArgumentException("Invalid launcher path");
-        return "\"" + value.TrimEnd('\\') + "\"";
+        int trailingSlashes = value.Length - value.TrimEnd('\\').Length;
+        return "\"" + value + new string('\\', trailingSlashes) + "\"";
     }
     private static int Main() {
         try {

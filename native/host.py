@@ -11,7 +11,8 @@ import sqlite3
 import struct
 import sys
 
-DEFAULT_DATA = Path(r"D:\dev\Documents\Ivan\data\browse-history-tracker")
+LOCAL_DATA = Path(os.environ.get("LOCALAPPDATA") or Path.home() / "AppData" / "Local")
+DEFAULT_DATA = LOCAL_DATA / "Video Ledger"
 MAX_MESSAGE = 1_000_000
 SCHEMA = """
 PRAGMA journal_mode=WAL;

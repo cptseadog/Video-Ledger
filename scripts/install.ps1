@@ -1,20 +1,34 @@
 param(
-    [string]$DataDir = 'D:\dev\Documents\Ivan\data\browse-history-tracker',
+    [string]$DataDir,
     [switch]$PrepareOnly
 )
 $ErrorActionPreference = 'Stop'
 $projectDir = Split-Path -Parent $PSScriptRoot
+$generated = Join-Path $projectDir 'native\generated'
+if ($PrepareOnly) {
+    $generated = Join-Path $generated 'check'
+    if (!$DataDir) { $DataDir = Join-Path $generated 'data' }
+} elseif (!$DataDir) {
+    # Keep the existing database when reinstalling from the same checkout.
+    $configPath = Join-Path $generated 'host-config.txt'
+    if (Test-Path -LiteralPath $configPath -PathType Leaf) {
+        $config = [IO.File]::ReadAllLines($configPath)
+        if ($config.Length -eq 3 -and [IO.Path]::IsPathRooted($config[2])) {
+            $DataDir = $config[2]
+        }
+    }
+    if (!$DataDir) { $DataDir = Join-Path $env:LOCALAPPDATA 'Video Ledger' }
+}
+$dataPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($DataDir)
 $previousCache = $env:UV_CACHE_DIR
 $env:UV_CACHE_DIR = Join-Path $projectDir '.uv-cache'
 Push-Location $projectDir
 try {
-    & uv sync --python 3.12
+    & uv sync --locked --python 3.12
     if ($LASTEXITCODE -ne 0) { throw 'uv sync failed' }
     $pythonPath = Join-Path $projectDir '.venv\Scripts\python.exe'
     $hostPath = Join-Path $projectDir 'native\host.py'
-    $generated = Join-Path $projectDir 'native\generated'
-    New-Item -ItemType Directory -Force -Path $generated | Out-Null
-    $dataPath = [IO.Path]::GetFullPath($DataDir)
+    [IO.Directory]::CreateDirectory($generated) | Out-Null
     # The native bridge receives three paths in a UTF-8 configuration file.
     foreach ($p in @($pythonPath, $hostPath, $dataPath)) {
         if ($p -match '[%"\r\n]') { throw 'Installation paths cannot contain percent signs, quotes, or newlines.' }
@@ -23,6 +37,8 @@ try {
     $sha = [Security.Cryptography.SHA256]::Create()
     $hash = $sha.ComputeHash([Convert]::FromBase64String($extensionManifest.key))
     $extensionId = -join ($hash[0..15] | ForEach-Object { [char](97 + ($_ -shr 4)); [char](97 + ($_ -band 15)) })
+    & $pythonPath $hostPath --data-dir $dataPath --check
+    if ($LASTEXITCODE -ne 0) { throw 'Native helper self-check failed' }
     $launcherPath = Join-Path $generated 'video-ledger-host.exe'
     $compiler = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
     if (!(Test-Path -LiteralPath $compiler)) { throw 'The Windows .NET Framework C# compiler was not found.' }
@@ -38,8 +54,6 @@ try {
         allowed_origins = @("chrome-extension://$extensionId/")
     } | ConvertTo-Json
     [IO.File]::WriteAllText($nativeManifestPath, $nativeManifest, (New-Object Text.UTF8Encoding($false)))
-    & $pythonPath $hostPath --data-dir $dataPath --check
-    if ($LASTEXITCODE -ne 0) { throw 'Native helper self-check failed' }
     if (!$PrepareOnly) {
         $registryPath = 'HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.seadog.video_ledger'
         New-Item -Path $registryPath -Force | Out-Null

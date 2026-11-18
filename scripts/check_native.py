@@ -7,9 +7,17 @@ import queue
 import threading
 
 root = Path(__file__).resolve().parent.parent
-manifest = json.loads((root / "native/generated/com.seadog.video_ledger.json").read_text(encoding="utf-8"))
+manifest_path = root / "native/generated/check/com.seadog.video_ledger.json"
+if not manifest_path.is_file():
+    raise SystemExit("Run scripts/install.ps1 -PrepareOnly before checking the native launcher.")
+manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 payload = b'{"op":"ping"}'
-process = subprocess.Popen([manifest["path"]], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+try:
+    process = subprocess.Popen(
+        [manifest["path"]], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+except OSError as error:
+    raise SystemExit(f"Could not start the prepared native launcher: {error}") from error
 responses = queue.Queue()
 def reader():
     try:

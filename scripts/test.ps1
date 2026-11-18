@@ -9,7 +9,7 @@ try {
     New-Item -ItemType Directory -Force -Path (Join-Path $projectDir 'test-results') | Out-Null
     $env:TEMP = Join-Path $projectDir 'test-results'
     $env:TMP = $env:TEMP
-    & uv run --offline python -m unittest discover -s tests -v
+    & uv run --locked --python 3.12 python -m unittest discover -s tests -v
     if ($LASTEXITCODE -ne 0) { throw 'Python tests failed' }
     & node --preserve-symlinks --preserve-symlinks-main --test tests/core.test.js tests/background.test.js
     if ($LASTEXITCODE -ne 0) { throw 'JavaScript tests failed' }
